@@ -1,5 +1,7 @@
 # 龙吟显卡
 
+[BV1CP3aeSEZu](https://www.bilibili.com/video/BV1CP3aeSEZu)
+
 ## 准备
 
 你得有个wave，可以参考[chdilo/BadAppleOSC](https://github.com/chdilo/BadAppleOSC) [yeonzi/badappe_oscilloscope](https://github.com/yeonzi/badappe_oscilloscope)
