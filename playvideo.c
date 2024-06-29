@@ -17,6 +17,8 @@
 
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <sys/ioctl.h>
+#include <linux/fb.h>
 
 #define XRES 800
 #define YRES 600
@@ -71,6 +73,7 @@ int main(int argc, char **argv)
     uint16_t blockalign;
     uint16_t bitspersample;
 
+    // parse header
     size_t i = 12;
     while (i < st.st_size) {
 
@@ -133,8 +136,7 @@ int main(int argc, char **argv)
     uint32_t pixelsPerSample = REFRESH * XRES * YRES / samplerate;
     printf("pixels per sample %u\n", pixelsPerSample);
 
-
-
+    // make jitter buffer
     uint32_t *leftJitterBuf = malloc((pixelsPerSample + UINT16_MAX + 1) * sizeof(uint32_t));
     uint32_t *rightJitterBuf = malloc((pixelsPerSample + UINT16_MAX + 1) * sizeof(uint32_t));
     // sum of first pixelsPerSample should be zero
@@ -159,6 +161,34 @@ int main(int argc, char **argv)
     fd = open("/dev/fb0", O_RDWR, 0644);
     if (fd < 0) {
         perror("open /dev/fb0");
+        return 1;
+    }
+
+    // switch display mode
+    struct fb_var_screeninfo var;
+    
+    ret = ioctl(fd, FBIOGET_VSCREENINFO, &var);
+    if (ret != 0) {
+        perror("ioctl(fd, FBIOGET_VSCREENINFO");
+        return 1;
+    }
+
+    var.xres = XRES;
+    var.yres = YRES;
+    var.xres_virtual = var.xres;
+    var.yres_virtual = var.yres;
+    var.xoffset = 0;
+    var.yoffset = 0;
+    var.hsync_len = 0;
+    var.vsync_len = 0;
+    var.left_margin = 0;
+    var.right_margin = 0;
+    var.upper_margin = 0;
+    var.lower_margin = 0;
+    var.pixclock = 1000L * 1000L * 1000L * 1000L / (var.xres * var.yres * 60);
+    ret = ioctl(fd, FBIOPUT_VSCREENINFO, &var);
+    if (ret != 0) {
+        perror("ioctl(fd, FBIOPUT_VSCREENINFO");
         return 1;
     }
 
